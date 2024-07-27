@@ -1,0 +1,46 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Page</title>
+    <link rel="stylesheet" href="~/css/Register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="register-box">
+            <h1>Register</h1>
+            <form asp-action="Register" method="post">
+                <div class="textbox">
+                    <input type="text" placeholder="Username" name="Username" required>
+                </div>
+                <div class="textbox">
+                    <input type="email" placeholder="Email" name="Email" required>
+                </div>
+                <div class="textbox">
+                    <input type="password" placeholder="Password" name="Password" required>
+                </div>
+                <div class="textbox">
+                    <input type="password" placeholder="Confirm Password" name="ConfirmPassword" required>
+                </div>
+                <div class="textbox">
+                    <input type="tel" placeholder="Phone Number" name="PhoneNumber" required>
+                </div>
+                <div class="error-message">
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <span>@ViewBag.ErrorMessage</span>
+                    }
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
