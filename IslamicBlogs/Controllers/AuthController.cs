@@ -2,6 +2,7 @@
 using IslamicBlogs.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace IslamicBlogs.Controllers
 {
@@ -26,18 +27,18 @@ namespace IslamicBlogs.Controllers
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
+                var signInResult = await _signInManager.PasswordSignInAsync(email, password, false, lockoutOnFailure: false);
+                if (signInResult.Succeeded)
                 {
-
-                    var isLogedIn = await _signInManager.CheckPasswordSignInAsync(user, password, false);
-                    if (isLogedIn.Succeeded)
+                    var user = await _userManager.FindByEmailAsync(email);
+                    if (user != null)
                     {
                         HttpContext.Session.SetString("UserEmail", user.Email);
                         HttpContext.Session.SetString("UserName", user.UserName);
-                        return RedirectToAction("Index", "Blogs");
                     }
+                    return RedirectToAction("Index", "Blogs");
                 }
+
                 ViewBag.ErrorMessage = "Invalid Login Attempt";
                 return View();
             }
@@ -56,28 +57,35 @@ namespace IslamicBlogs.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUser != null)
                 {
-                    if (model.Password == model.ConfirmPassword)
-                    {
-                        var newUser = new IdentityUser
-                        {
-                            Email = model.Email,
-                            UserName = model.UserName,
-                            PhoneNumber = model.PhoneNumber
-                        };
-                        var result = await _userManager.CreateAsync(newUser, model.Password);
-                        if (result.Succeeded)
-                        {
-                            return RedirectToAction(nameof(Login));
-                        }
-                        ViewBag.ErrorMessage = result.Errors.ToString();
-                    }
-                    ViewBag.ErrorMessage = "Passowrds does not match";
+                    ViewBag.ErrorMessage = "User with same email already exist";
+                    return View();
                 }
-                ViewBag.ErrorMessage = "User with same email already exist";
+
+                if (model.Password != model.ConfirmPassword)
+                {
+                    ViewBag.ErrorMessage = "Passwords do not match";
+                    return View();
+                }
+
+                var newUser = new IdentityUser
+                {
+                    Email = model.Email,
+                    UserName = model.UserName,
+                    PhoneNumber = model.PhoneNumber
+                };
+
+                var result = await _userManager.CreateAsync(newUser, model.Password);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction(nameof(Login));
+                }
+
+                ViewBag.ErrorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
             }
+
             return View();
         }
     }
